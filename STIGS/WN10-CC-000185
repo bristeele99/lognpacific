@@ -1,0 +1,45 @@
+<#
+.SYNOPSIS
+    This PowerShell script ensures Windows Defender Antivirus is enabled and running.
+
+.NOTES
+    Author          : Brianna Steele
+    LinkedIn        : linkedin.com/in/briannaanulo/
+    GitHub          : github.com/bristeele99
+    Date Created    : 2025-06-01
+    Last Modified   : 2025-06-01
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000185
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    PS C:\> .\Remediate-WN10-CC-000185.ps1
+#>
+
+# Ensure Defender service is set to start automatically
+Set-Service -Name WinDefend -StartupType Automatic
+
+# Start the Defender service if not already running
+Start-Service -Name WinDefend
+
+# Set Group Policy override in registry to ensure Defender is not disabled
+$RegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender"
+If (!(Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force
+}
+
+# Set the DisableAntiSpyware value to 0 (which means Defender is enabled)
+Set-ItemProperty -Path $RegPath -Name "DisableAntiSpyware" -Value 0 -Type DWord
+
+# Force Group Policy update
+gpupdate /force
+
+# Confirm Defender is running
+Get-Service -Name WinDefend
